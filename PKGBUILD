@@ -1,3 +1,4 @@
+# Original repository: https://github.com/hkr04/cpp-mcp
 # Maintainer: K_log Televised - youtube klog.website.notdotcom@gmail.com
 pkgname=cpp-mcp
 pkgver=alpha
@@ -7,14 +8,14 @@ arch=('x86_64' 'i686' 'armv7h' 'aarch64')
 url="https://github.com/klogdotwebsitenotdotcom/cpp-mcp"
 license=('MIT')
 depends=('openssl')
-makedepends=('cmake' 'ninja' 'git')
+makedepends=('cmake')
 # Use git source with specific branch
 source=("git+${url}.git#branch=distribution")
 sha256sums=('SKIP')
 
 # Build options
 options=('!strip' 'staticlibs')
-: ${MCP_SSL:=OFF}
+: ${MCP_SSL:=ON}
 
 build() {
   cd "$srcdir/cpp-mcp"
@@ -37,16 +38,13 @@ package() {
   
   DESTDIR="$pkgdir" cmake --install build
   
-  # Move library to cpp-mcp namespace
-  if [ -f "$pkgdir/usr/lib/libmcp.a" ]; then
-    mv "$pkgdir/usr/lib/libmcp.a" "$pkgdir/usr/lib/libcpp-mcp.a"
-  fi
-  
-  # Move headers to cpp-mcp namespace
+  # Move headers to mcp namespace (matching Debian)
   if [ -d "$pkgdir/usr/include" ]; then
-    mkdir -p "$pkgdir/usr/include/cpp-mcp"
-    mv "$pkgdir/usr/include/mcp_"*.h "$pkgdir/usr/include/cpp-mcp/" 2>/dev/null || true
-    mv "$pkgdir/usr/include/mcp" "$pkgdir/usr/include/cpp-mcp/" 2>/dev/null || true
+    mkdir -p "$pkgdir/usr/include/mcp"
+    mv "$pkgdir/usr/include/mcp_"*.h "$pkgdir/usr/include/mcp/" 2>/dev/null || true
+    
+    # Move common headers
+    cp common/*.h* "$pkgdir/usr/include/mcp/" 2>/dev/null || true
   fi
   
   # Install license
@@ -60,12 +58,12 @@ package() {
 prefix=/usr
 exec_prefix=\${prefix}
 libdir=\${prefix}/lib
-includedir=\${prefix}/include/cpp-mcp
+includedir=\${prefix}/include/mcp
 
 Name: cpp-mcp
 Description: C++ implementation of Model Context Protocol (MCP)
 Version: ${pkgver}
-Libs: -L\${libdir} -lcpp-mcp -lpthread
+Libs: -L\${libdir} -lmcp -lpthread
 Cflags: -I\${includedir}
 Requires: openssl
 EOF
